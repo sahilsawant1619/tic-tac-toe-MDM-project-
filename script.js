@@ -8,6 +8,11 @@ class TicTacToe {
             O: 0
         };
         
+        // Timer variables
+        this.timer = null;
+        this.timeLeft = 4; // 4 seconds for each turn
+        this.maxTime = 4;
+        
         this.winningConditions = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
             [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -22,6 +27,7 @@ class TicTacToe {
         this.updateStatus();
         this.setupEventListeners();
         this.updateScores();
+        this.startTimer(); // Start timer for first player
     }
 
     createBoard() {
@@ -40,6 +46,9 @@ class TicTacToe {
     handleCellClick(index) {
         if (!this.gameActive || this.board[index] !== '') return;
 
+        // Stop current timer
+        this.stopTimer();
+        
         this.board[index] = this.currentPlayer;
         this.updateBoard();
         
@@ -50,6 +59,75 @@ class TicTacToe {
         } else {
             this.switchPlayer();
             this.updateStatus();
+            this.startTimer(); // Start timer for next player
+        }
+    }
+
+    // Timer Functions
+    startTimer() {
+        this.timeLeft = this.maxTime;
+        this.updateTimerDisplay();
+        
+        this.timer = setInterval(() => {
+            this.timeLeft--;
+            this.updateTimerDisplay();
+            
+            if (this.timeLeft <= 0) {
+                this.handleTimeOut();
+            }
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    handleTimeOut() {
+        this.stopTimer();
+        
+        if (this.gameActive) {
+            // Time out - switch to other player
+            this.switchPlayer();
+            this.updateStatus();
+            this.startTimer(); // Start timer for next player
+            
+            // Show timeout message
+            const statusElement = document.getElementById('status');
+            const originalText = statusElement.textContent;
+            statusElement.textContent = `Time Out! ${this.currentPlayer}'s Turn`;
+            statusElement.style.background = '#e74c3c';
+            
+            // Reset to original after 1 second
+            setTimeout(() => {
+                this.updateStatus();
+            }, 1000);
+        }
+    }
+
+    updateTimerDisplay() {
+        const timerProgress = document.getElementById('timerProgress');
+        const timerText = document.getElementById('timerText');
+        
+        // Calculate percentage
+        const percentage = (this.timeLeft / this.maxTime) * 100;
+        timerProgress.style.width = `${percentage}%`;
+        
+        // Update timer text
+        timerText.textContent = `${this.timeLeft}s`;
+        
+        // Change color based on time left
+        if (this.timeLeft <= 1) {
+            timerText.classList.add('timer-warning');
+            timerProgress.style.background = '#e74c3c';
+        } else if (this.timeLeft <= 2) {
+            timerText.classList.remove('timer-warning');
+            timerProgress.style.background = '#f1c40f';
+        } else {
+            timerText.classList.remove('timer-warning');
+            timerProgress.style.background = '#2ecc71';
         }
     }
 
@@ -86,6 +164,7 @@ class TicTacToe {
 
     handleWin() {
         this.gameActive = false;
+        this.stopTimer(); // Stop timer when game ends
         this.scores[this.currentPlayer]++;
         this.updateScores();
         
@@ -101,6 +180,7 @@ class TicTacToe {
 
     handleDraw() {
         this.gameActive = false;
+        this.stopTimer(); // Stop timer when game ends
         document.getElementById('status').textContent = "Game Draw! 🤝";
         document.getElementById('status').style.background = '#7f8c8d';
     }
@@ -121,6 +201,9 @@ class TicTacToe {
     }
 
     resetGame() {
+        // Stop any running timer
+        this.stopTimer();
+        
         this.board = Array(9).fill('');
         this.currentPlayer = 'X';
         this.gameActive = true;
@@ -131,6 +214,7 @@ class TicTacToe {
         
         this.createBoard();
         this.updateStatus();
+        this.startTimer(); // Start timer for new game
     }
 
     resetScores() {

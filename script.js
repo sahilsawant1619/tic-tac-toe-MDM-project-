@@ -10,8 +10,12 @@ class TicTacToe {
         
         // Timer variables
         this.timer = null;
-        this.timeLeft = 4; // 4 seconds for each turn
+        this.timeLeft = 4;
         this.maxTime = 4;
+
+        // Color theme variables
+        this.colorThemes = ['theme-blue', 'theme-green', 'theme-orange', 'theme-purple', 'theme-dark'];
+        this.currentThemeIndex = 0;
         
         this.winningConditions = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -23,11 +27,59 @@ class TicTacToe {
     }
 
     initializeGame() {
+        this.showSplashScreen();
+        this.setupColorChanger();
         this.createBoard();
         this.updateStatus();
         this.setupEventListeners();
         this.updateScores();
-        this.startTimer(); // Start timer for first player
+    }
+
+    showSplashScreen() {
+        const splashScreen = document.getElementById('splashScreen');
+        const mainContainer = document.getElementById('mainContainer');
+        
+        // Hide main container initially
+        mainContainer.style.display = 'none';
+        
+        // Show splash screen for 3 seconds
+        setTimeout(() => {
+            splashScreen.classList.add('hidden');
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+                mainContainer.style.display = 'block';
+                this.startTimer(); // Start timer after splash
+            }, 500);
+        }, 3000);
+    }
+
+    setupColorChanger() {
+        const colorChanger = document.getElementById('colorChanger');
+        colorChanger.addEventListener('click', () => {
+            this.changeBackgroundColor();
+        });
+    }
+
+    changeBackgroundColor() {
+        const body = document.body;
+        
+        // Remove current theme
+        this.colorThemes.forEach(theme => {
+            body.classList.remove(theme);
+        });
+        
+        // Move to next theme
+        this.currentThemeIndex = (this.currentThemeIndex + 1) % this.colorThemes.length;
+        
+        // Apply new theme
+        body.classList.add(this.colorThemes[this.currentThemeIndex]);
+        
+        // Add click animation to emoji
+        const colorChanger = document.getElementById('colorChanger');
+        colorChanger.style.transform = 'scale(1.2) rotate(360deg)';
+        setTimeout(() => {
+            colorChanger.style.transform = '';
+        }, 300);
     }
 
     createBoard() {
@@ -46,9 +98,7 @@ class TicTacToe {
     handleCellClick(index) {
         if (!this.gameActive || this.board[index] !== '') return;
 
-        // Stop current timer
         this.stopTimer();
-        
         this.board[index] = this.currentPlayer;
         this.updateBoard();
         
@@ -59,11 +109,10 @@ class TicTacToe {
         } else {
             this.switchPlayer();
             this.updateStatus();
-            this.startTimer(); // Start timer for next player
+            this.startTimer();
         }
     }
 
-    // Timer Functions
     startTimer() {
         this.timeLeft = this.maxTime;
         this.updateTimerDisplay();
@@ -89,18 +138,15 @@ class TicTacToe {
         this.stopTimer();
         
         if (this.gameActive) {
-            // Time out - switch to other player
             this.switchPlayer();
             this.updateStatus();
-            this.startTimer(); // Start timer for next player
+            this.startTimer();
             
-            // Show timeout message
             const statusElement = document.getElementById('status');
             const originalText = statusElement.textContent;
             statusElement.textContent = `Time Out! ${this.currentPlayer}'s Turn`;
             statusElement.style.background = '#e74c3c';
             
-            // Reset to original after 1 second
             setTimeout(() => {
                 this.updateStatus();
             }, 1000);
@@ -111,14 +157,10 @@ class TicTacToe {
         const timerProgress = document.getElementById('timerProgress');
         const timerText = document.getElementById('timerText');
         
-        // Calculate percentage
         const percentage = (this.timeLeft / this.maxTime) * 100;
         timerProgress.style.width = `${percentage}%`;
-        
-        // Update timer text
         timerText.textContent = `${this.timeLeft}s`;
         
-        // Change color based on time left
         if (this.timeLeft <= 1) {
             timerText.classList.add('timer-warning');
             timerProgress.style.background = '#e74c3c';
@@ -164,7 +206,7 @@ class TicTacToe {
 
     handleWin() {
         this.gameActive = false;
-        this.stopTimer(); // Stop timer when game ends
+        this.stopTimer();
         this.scores[this.currentPlayer]++;
         this.updateScores();
         
@@ -180,7 +222,7 @@ class TicTacToe {
 
     handleDraw() {
         this.gameActive = false;
-        this.stopTimer(); // Stop timer when game ends
+        this.stopTimer();
         document.getElementById('status').textContent = "Game Draw! 🤝";
         document.getElementById('status').style.background = '#7f8c8d';
     }
@@ -201,9 +243,7 @@ class TicTacToe {
     }
 
     resetGame() {
-        // Stop any running timer
         this.stopTimer();
-        
         this.board = Array(9).fill('');
         this.currentPlayer = 'X';
         this.gameActive = true;
@@ -214,7 +254,7 @@ class TicTacToe {
         
         this.createBoard();
         this.updateStatus();
-        this.startTimer(); // Start timer for new game
+        this.startTimer();
     }
 
     resetScores() {
